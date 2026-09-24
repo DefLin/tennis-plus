@@ -14,10 +14,10 @@ services:
     image: mysql:8.0
     restart: unless-stopped
     environment:
-      MYSQL_DATABASE: tennis
-      MYSQL_USER: tennis
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-change-this-password}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-change-this-root-password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-tennis}
+      MYSQL_USER: ${MYSQL_USER:-tennis}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-abc123}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-abc123root}
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
     volumes:
       - mysql_data:/var/lib/mysql
