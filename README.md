@@ -8,6 +8,12 @@
 - `POST /v1/payments/wechat/notify`：验签、解密微信支付回调并完成订单
 - `GET /health`：服务和数据库健康检查
 
+项目已包含 `package-lock.json`，Docker 使用 `npm ci` 做可重复安装。如果你是从旧版本目录部署、目录中没有锁定文件，可以先执行：
+
+```bash
+npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+```
+
 ## 快速部署（阿里云 Ubuntu）
 
 ```bash
