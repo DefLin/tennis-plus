@@ -39,7 +39,7 @@ WECHAT_PLATFORM_CERT_PATH=/app/keys/wechatpay_platform.pem
 openssl rand -hex 32
 ```
 
-编辑 `.env` 中的 `JWT_SECRET`、数据库密码、AppSecret、商户号和 API v3 密钥。随后启动：
+编辑 `.env` 中的 `JWT_SECRET`、数据库密码、AppSecret、商户号和 API v3 密钥。`MYSQL_PASSWORD` 必须与 `DATABASE_URL` 中 `tennis:` 后面的密码完全一致；`MYSQL_ROOT_PASSWORD` 是数据库管理员密码。Docker 第一次初始化 MySQL 时才会读取这两个密码，已有数据卷不会因为修改 `.env` 自动改密码。随后启动：
 
 ```bash
 docker compose up -d --build
