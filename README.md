@@ -62,13 +62,13 @@ sudo nginx -t && sudo systemctl reload nginx
 然后用 Certbot 配置 HTTPS：
 
 ```bash
-sudo certbot --nginx -d api.deflin.xyz
+sudo certbot --nginx -d api.def00.xyz
 ```
 
-微信公众平台的 request 合法域名必须填写 `https://api.deflin.xyz`；微信支付回调必须填写：
+微信公众平台的 request 合法域名必须填写 `https://api.def00.xyz`；微信支付回调必须填写：
 
 ```text
-https://api.deflin.xyz/v1/payments/wechat/notify
+https://api.def00.xyz/v1/payments/wechat/notify
 ```
 
 也可以直接运行：
