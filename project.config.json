@@ -1,0 +1,25 @@
+{
+  "description": "球搭 - 网球场地预订与约球小程序",
+  "packOptions": {
+    "ignore": []
+  },
+  "setting": {
+    "bundle": false,
+    "userConfirmedBundleSwitch": false,
+    "urlCheck": true,
+    "es6": true,
+    "enhance": true,
+    "postcss": true,
+    "minified": true,
+    "newFeature": true,
+    "coverView": true,
+    "nodeModules": false,
+    "scopeDataCheck": false
+  },
+  "compileType": "miniprogram",
+  "libVersion": "3.7.12",
+  "appid": "wx325e1bb54285c3ff",
+  "projectname": "tennis-plus",
+  "simulatorType": "wechat",
+  "condition": {}
+}

@@ -1,0 +1,38 @@
+<view class="page courts-page">
+  <view class="search-row">
+    <view class="search-box"><text class="search-icon">⌕</text><input placeholder="搜索球场名称或商圈" value="{{query}}" bindinput="onSearch"/></view>
+    <view class="map-toggle" bindtap="toggleView">{{viewMode === 'list' ? '地图' : '列表'}}</view>
+  </view>
+  <view class="location-row" bindtap="locateUser">⌖ <text>{{locationName}}</text><text class="locate">{{locating ? '定位中…' : '重新定位'}}</text></view>
+  <scroll-view class="filter-scroll" scroll-x show-scrollbar="false">
+    <view class="filter-row">
+      <view class="filter {{activeFilter === item ? 'active' : ''}}" wx:for="{{filters}}" wx:key="*this" data-value="{{item}}" bindtap="chooseFilter">{{item}} {{index === 0 ? '⌄' : ''}}</view>
+    </view>
+  </scroll-view>
+
+  <view wx:if="{{viewMode === 'map'}}" class="map-wrap">
+    <map class="venue-map" latitude="{{latitude}}" longitude="{{longitude}}" scale="13" markers="{{markers}}" include-points="{{includePoints}}" show-location bindmarkertap="markerTap"></map>
+    <view wx:if="{{nearbyLoading}}" class="map-status">正在查找附近球场…</view>
+    <view wx:elif="{{!markers.length}}" class="map-status">附近暂未找到网球场</view>
+  </view>
+
+  <view wx:else>
+    <view class="result-head"><text>附近 {{filteredVenues.length}} 个球场</text><text class="muted">直线距离</text></view>
+    <view class="venue-list-card card" wx:for="{{filteredVenues}}" wx:key="id" data-id="{{item.id}}" bindtap="goVenue">
+      <view class="venue-thumb" style="background: {{item.color}};">
+        <view class="mini-court"><view class="net"></view></view>
+        <text class="thumb-name">{{item.shortName}}</text>
+        <text class="thumb-label">{{item.label}}</text>
+      </view>
+      <view class="venue-content">
+        <view class="name-line"><view class="name">{{item.name}}</view><view class="distance">{{item.distance}}</view></view>
+        <view wx:if="{{item.rating}}" class="rating"><text>★ {{item.rating}}</text>（{{item.reviews}}） · {{item.courts}}片场</view>
+        <view wx:else class="rating"><text>⌖ {{item.distance}}</text> · 地图场馆信息</view>
+        <view class="address">{{item.address}} · 营业至 {{item.open}}</view>
+        <view class="tag-row"><text class="outline-tag" wx:for="{{item.tags}}" wx:key="*this">{{item}}</text></view>
+        <view class="bottom-line"><view wx:if="{{item.price}}"><text class="price">¥{{item.price}}</text><text class="unit"> 起/小时</text></view><view wx:else class="map-source">位置服务数据</view><view class="book-pill">{{item.source === 'tencent-map' ? '查看位置' : '可预订'}}</view></view>
+      </view>
+    </view>
+    <view wx:if="{{!filteredVenues.length}}" class="empty"><view class="empty-ball">●</view><view>没有找到匹配的球场</view><text>换个关键词试试</text></view>
+  </view>
+</view>

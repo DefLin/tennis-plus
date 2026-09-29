@@ -1,0 +1,28 @@
+<view class="page booking-page">
+  <view class="order-card card">
+    <view class="venue-thumb" style="background: {{venue.color}};"><view class="court-mark">＋</view><text>{{venue.shortName}}</text></view>
+    <view class="venue-info"><view class="name">{{venue.name}}</view><view>{{venue.address}}</view><text>{{date}} · {{time}}–{{endTime}}</text></view>
+  </view>
+
+  <view class="section-label">联系人信息</view>
+  <view class="form-card card">
+    <view class="field"><text>联系人</text><input placeholder="请输入姓名" value="{{contactName}}" bindinput="onName"/></view>
+    <view class="field"><text>手机号</text><input type="number" maxlength="11" placeholder="用于接收预订通知" value="{{contactPhone}}" bindinput="onPhone"/></view>
+  </view>
+
+  <view class="section-label">费用明细</view>
+  <view class="cost-card card">
+    <view><text>场地费（1小时）</text><text>¥{{price}}.00</text></view>
+    <view><text>平台服务费</text><text>¥{{serviceFee}}.00</text></view>
+    <view class="coupon"><text>优惠券</text><text>暂无可用 ›</text></view>
+    <view class="total-line"><text>合计</text><view><text>微信支付</text> ¥{{total}}.00</view></view>
+  </view>
+
+  <view wx:if="{{demoMode}}" class="demo-note"><text>DEMO</text><view><view>当前为演示支付</view><view>不产生真实扣款，配置商户后自动启用微信支付。</view></view></view>
+  <view class="agreement" bindtap="toggleAgreement"><view class="checkbox {{agreement ? 'checked' : ''}}">{{agreement ? '✓' : ''}}</view><text>我已阅读并同意《场地预订规则》</text></view>
+  <view class="safe-bottom"></view>
+</view>
+<view class="paybar">
+  <view class="amount"><text>应付</text><view>¥<text>{{total}}.00</text></view></view>
+  <button class="pay-btn" loading="{{paying}}" bindtap="pay"><text class="wechat">●</text> 微信支付</button>
+</view>

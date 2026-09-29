@@ -1,0 +1,39 @@
+{
+  "pages": [
+    "pages/home/home",
+    "pages/courts/courts",
+    "pages/matches/matches",
+    "pages/profile/profile",
+    "pages/court-detail/court-detail",
+    "pages/booking/booking",
+    "pages/create-match/create-match",
+    "pages/orders/orders"
+  ],
+  "window": {
+    "navigationBarBackgroundColor": "#F7F8F3",
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "球搭 TENNIS+",
+    "backgroundColor": "#F7F8F3",
+    "backgroundTextStyle": "dark"
+  },
+  "tabBar": {
+    "color": "#8B9087",
+    "selectedColor": "#154734",
+    "backgroundColor": "#FFFFFF",
+    "borderStyle": "white",
+    "list": [
+      { "pagePath": "pages/home/home", "text": "首页" },
+      { "pagePath": "pages/courts/courts", "text": "球场" },
+      { "pagePath": "pages/matches/matches", "text": "约球" },
+      { "pagePath": "pages/profile/profile", "text": "我的" }
+    ]
+  },
+  "permission": {
+    "scope.userLocation": {
+      "desc": "用于展示你附近的网球场"
+    }
+  },
+  "requiredPrivateInfos": ["getLocation"],
+  "sitemapLocation": "sitemap.json",
+  "style": "v2"
+}

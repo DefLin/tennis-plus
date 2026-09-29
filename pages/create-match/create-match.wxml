@@ -1,0 +1,15 @@
+<view class="page create-page">
+  <view class="intro"><view class="ball">●</view><view><view>组一场新球局</view><text>说清时间地点，球搭马上来</text></view></view>
+  <view class="form card">
+    <view class="field text-field"><text>约球标题</text><input maxlength="24" placeholder="例如：下班轻松拉球" value="{{title}}" bindinput="onTitle"/></view>
+    <view class="field"><text>球场</text><picker range="{{venues}}" range-key="name" value="{{venueIndex}}" bindchange="onVenue"><view>{{venues[venueIndex].name}} ›</view></picker></view>
+    <view class="field"><text>日期</text><picker range="{{dates}}" range-key="label" value="{{dateIndex}}" bindchange="onDate"><view>{{dates[dateIndex].label}} · {{dates[dateIndex].value}} ›</view></picker></view>
+    <view class="field"><text>开始时间</text><picker mode="time" value="{{time}}" bindchange="onTime"><view>{{time}} ›</view></picker></view>
+    <view class="field"><text>期望水平</text><picker range="{{levels}}" bindchange="onLevel"><view>{{level}} ›</view></picker></view>
+    <view class="field"><text>预计费用</text><view class="fee-input">AA ¥<input type="digit" value="{{fee}}" bindinput="onFee"/> /人</view></view>
+  </view>
+  <view class="section-label">打球形式</view>
+  <view class="type-row"><view class="type {{type === item ? 'active' : ''}}" wx:for="{{types}}" wx:key="*this" data-value="{{item}}" bindtap="chooseType"><text>{{index === 0 ? '1 × 1' : '2 × 2'}}</text><view>{{item}}</view><text>{{index === 0 ? '共 2 人' : '共 4 人'}}</text></view></view>
+  <view class="tip">发布后，其他球友可以申请加入。你确认后，双方可通过微信联系。</view>
+  <button class="dark-btn publish" bindtap="publish">确认发布</button>
+</view>

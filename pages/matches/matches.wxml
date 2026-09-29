@@ -1,0 +1,32 @@
+<view class="page match-page">
+  <view class="match-hero">
+    <view><view class="kicker">FIND YOUR PARTNER</view><view class="hero-title">总有人，<br/>和你一样想打球</view></view>
+    <view class="balls"><view></view><view></view><view></view></view>
+    <button bindtap="goCreate">＋ 发起约球</button>
+  </view>
+
+  <scroll-view class="tab-scroll" scroll-x show-scrollbar="false"><view class="tabs">
+    <view class="tab {{activeTab === item ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="*this" data-tab="{{item}}" bindtap="setTab">{{item}}</view>
+  </view></scroll-view>
+
+  <view class="list-head"><view><text>附近约球</text><text class="count">{{visibleMatches.length}} 场</text></view><text>按距离 ⌄</text></view>
+  <view class="match-card card" wx:for="{{visibleMatches}}" wx:key="id">
+    <view class="host-row">
+      <view class="avatar color-{{index}}">{{item.avatar}}</view>
+      <view class="host"><view>{{item.host}} <text>{{item.level}}</text></view><text>信用极好 · 已组织 {{12 + index * 7}} 场</text></view>
+      <view class="type">{{item.type}}</view>
+    </view>
+    <view class="title">{{item.title}}</view>
+    <view class="info-panel">
+      <view><text class="info-icon">◷</text><text>{{item.date}}</text></view>
+      <view><text class="info-icon">⌖</text><text>{{item.venue}} <text class="distance">{{item.distance}}</text></text></view>
+    </view>
+    <view class="level-row"><text>期望水平</text><view class="level-bar"><view style="width: {{item.level.includes('3.5') ? '78%' : item.level.includes('3.0') ? '62%' : '48%'}};"></view></view><text>{{item.level}}</text></view>
+    <view class="match-bottom">
+      <view class="spots"><view class="people"><text wx:for="{{item.total}}" wx:key="*this" class="{{index < item.players ? 'filled' : ''}}">●</text></view><text>还差 {{item.total - item.players}} 人</text></view>
+      <view class="fee">AA <text>¥{{item.price}}</text>/人</view>
+      <button data-host="{{item.host}}" bindtap="join">申请加入</button>
+    </view>
+  </view>
+  <view wx:if="{{!visibleMatches.length}}" class="empty">暂无符合条件的约球</view>
+</view>

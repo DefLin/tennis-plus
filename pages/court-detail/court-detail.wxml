@@ -1,0 +1,35 @@
+<view class="detail-page">
+  <view class="venue-hero" style="background: {{venue.color}};">
+    <view class="hero-label lime-tag">{{venue.label}}</view>
+    <view class="hero-court"><view class="hero-net"></view><view class="service-line"></view></view>
+    <view class="hero-logo">{{venue.shortName}}</view>
+    <view class="favorite {{favorite ? 'on' : ''}}" bindtap="toggleFavorite">{{favorite ? '♥' : '♡'}}</view>
+  </view>
+
+  <view class="content">
+    <view class="info-card card">
+      <view class="name-row"><view><view class="venue-name">{{venue.name}}</view><view class="rating"><text>★ {{venue.rating}}</text> · {{venue.reviews}}条评价 · {{venue.courts}}片场地</view></view><view class="distance">{{venue.distance}}</view></view>
+      <view class="tag-row"><text class="soft-tag" wx:for="{{venue.tags}}" wx:key="*this">{{item}}</text></view>
+      <view class="address-row" bindtap="openLocation"><view class="pin">⌖</view><view class="address"><view>{{venue.address}}</view><text>营业时间 {{venue.open}}</text></view><view class="arrow">›</view></view>
+      <view class="actions"><view bindtap="callVenue">☏ 联系场馆</view><view bindtap="openLocation">➤ 导航前往</view></view>
+    </view>
+
+    <view class="section-head"><view><view class="section-title">选择日期</view><view class="section-caption">最多可预订未来 7 天</view></view></view>
+    <scroll-view class="date-scroll" scroll-x show-scrollbar="false"><view class="date-row">
+      <view class="date {{item.active ? 'active' : ''}}" wx:for="{{dates}}" wx:key="value" data-value="{{item.value}}" bindtap="selectDate"><text>{{item.label}}</text><view>{{item.day}}</view></view>
+    </view></scroll-view>
+
+    <view class="section-head slot-head"><view class="section-title">选择时段</view><view class="legend"><text class="legend-dot"></text>可订 <text class="legend-dot busy"></text>已约满</view></view>
+    <view class="slot-grid">
+      <view class="slot {{item.state === 'busy' ? 'busy' : ''}} {{selectedSlot === item.time ? 'selected' : ''}}" wx:for="{{slots}}" wx:key="time" data-time="{{item.time}}" data-state="{{item.state}}" bindtap="selectSlot">
+        <text class="slot-time">{{item.time}}</text><text class="slot-price">{{item.state === 'busy' ? '已约满' : '¥' + item.price}}</text>
+      </view>
+    </view>
+
+    <view class="notice card"><view class="notice-title">预订须知</view><view>· 开场前 4 小时可免费取消</view><view>· 请穿着专业网球鞋入场</view><view>· 场地费用不包含球拍及网球</view></view>
+  </view>
+  <view class="booking-bar">
+    <view class="selection"><text>{{selectedSlot ? selectedDate + ' · ' + selectedSlot : '请选择一个时段'}}</text><view wx:if="{{selectedSlot}}">1 小时 · 现场无需再付款</view></view>
+    <button class="dark-btn submit" bindtap="submitBooking">确认预订</button>
+  </view>
+</view>

@@ -1,0 +1,56 @@
+<view class="profile-page">
+  <view class="profile-hero">
+    <view class="brand-row">
+      <view class="brand">球搭<text>●</text></view>
+      <view wx:if="{{user}}" class="login-state"><text></text>微信账号已登录</view>
+    </view>
+
+    <view wx:if="{{restoringSession && !user}}" class="user-block loading-user">
+      <view class="big-avatar skeleton"></view>
+      <view class="user-copy"><view>正在恢复登录状态</view><text>请稍候</text></view>
+    </view>
+
+    <view wx:elif="{{user}}" class="user-block">
+      <button class="big-avatar avatar-button" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">
+        <image wx:if="{{user.avatarUrl}}" src="{{user.avatarUrl}}" mode="aspectFill"></image>
+        <text wx:else>{{user.avatarText}}</text>
+      </button>
+      <view class="user-copy"><view>{{user.nickname}}</view><text>{{user.level}} · 微信账号</text></view>
+      <view class="edit" bindtap="startEditProfile">编辑资料 ›</view>
+    </view>
+
+    <view wx:else class="guest-wrap">
+      <view class="user-block guest">
+        <view class="big-avatar">微</view>
+        <view class="user-copy"><view>登录后开始打球</view><text>同步订单、约球和个人资料</text></view>
+      </view>
+      <button class="wechat-login" loading="{{loggingIn}}" bindtap="login"><text>●</text> 使用微信账号登录</button>
+    </view>
+  </view>
+
+  <view class="profile-content">
+    <view class="stats card">
+      <view wx:for="{{stats}}" wx:key="label"><text>{{item.value}}</text><view>{{item.label}}</view></view>
+    </view>
+
+    <view wx:if="{{editingProfile}}" class="edit-card card">
+      <view class="edit-title">编辑个人资料</view>
+      <view class="nickname-field"><text>昵称</text><input type="nickname" maxlength="20" value="{{draftNickname}}" placeholder="请输入昵称" bindinput="onNicknameInput"/></view>
+      <view class="edit-actions"><button bindtap="cancelEditProfile">取消</button><button class="save" loading="{{savingProfile}}" bindtap="saveProfile">保存</button></view>
+    </view>
+
+    <view class="level-card card">
+      <view class="level-top"><view><text>我的等级</text><view>{{user ? user.level : '登录后评定'}}</view></view><view class="level-badge">NTRP</view></view>
+      <view class="progress"><view style="width: {{user ? '46%' : '0'}};"></view></view>
+      <text>{{user ? '再完成球局可更新你的网球等级' : '登录后完成水平测试，匹配合适的球友'}}</text>
+    </view>
+
+    <view class="menu card">
+      <view class="menu-item" wx:for="{{menu}}" wx:key="title" data-action="{{item.action}}" bindtap="menuTap">
+        <view class="menu-icon">{{item.icon}}</view><view class="menu-copy"><view>{{item.title}}</view><text>{{item.sub}}</text></view><text class="arrow">›</text>
+      </view>
+    </view>
+    <button wx:if="{{user}}" class="logout" bindtap="logout">退出微信账号</button>
+    <view class="version">球搭 TENNIS+ · v1.0.0</view>
+  </view>
+</view>

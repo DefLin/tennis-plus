@@ -1,0 +1,10 @@
+<view class="page orders-page">
+  <view class="order card" wx:for="{{orders}}" wx:key="orderNo">
+    <view class="order-head"><text>订单号 {{item.orderNo}}</text><text class="status {{item.status === '已取消' ? 'cancelled' : ''}}">{{item.status}}</text></view>
+    <view class="order-main">
+      <view class="thumb" style="background: {{item.venue.color}};"><text>{{item.venue.shortName}}</text></view>
+      <view class="info"><view>{{item.venue.name}}</view><text>{{item.date}} · {{item.time}}</text><text>{{item.venue.address}}</text></view>
+    </view>
+    <view class="order-foot"><view>实付 <text>¥{{item.total || item.price}}</text></view><button wx:if="{{item.status !== '已取消'}}" data-index="{{index}}" bindtap="cancel">取消预订</button><button class="primary" data-id="{{item.venue.id}}" bindtap="goVenue">再订一场</button></view>
+  </view>
+</view>

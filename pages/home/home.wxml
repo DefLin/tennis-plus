@@ -1,0 +1,94 @@
+<view class="home">
+  <view class="topbar">
+    <view>
+      <view class="brand">球搭<text class="brand-dot">●</text></view>
+      <view class="location" bindtap="goCourts">⌖ {{locationName}} <text class="chevron">⌄</text></view>
+    </view>
+    <view class="top-actions">
+      <view class="round-action" bindtap="goOrders">⌁</view>
+      <view class="avatar mini" bindtap="goProfile">我</view>
+    </view>
+  </view>
+
+  <view class="hero card">
+    <view class="hero-copy">
+      <view class="hero-kicker">SERVE · RALLY · REPEAT</view>
+      <view class="hero-title">今天，<br/>去打网球吧</view>
+      <view class="hero-sub">附近好场地，最快 30 秒预订</view>
+      <button class="hero-btn" bindtap="goCourts">立即订场 <text>→</text></button>
+    </view>
+    <view class="tennis-art">
+      <view class="sun"></view>
+      <view class="court-line line-a"></view>
+      <view class="court-line line-b"></view>
+      <view class="racket">
+        <view class="racket-net net-a"></view>
+        <view class="racket-net net-b"></view>
+        <view class="racket-handle"></view>
+      </view>
+      <view class="ball"></view>
+    </view>
+  </view>
+
+  <view class="quick-grid">
+    <view class="quick card" bindtap="goCourts">
+      <view class="quick-icon green-bg">▦</view>
+      <view><view class="quick-title">预定场地</view><view class="quick-sub">实时余位</view></view>
+      <text class="quick-arrow">›</text>
+    </view>
+    <view class="quick card" bindtap="goCreateMatch">
+      <view class="quick-icon lime-bg">♧</view>
+      <view><view class="quick-title">发起约球</view><view class="quick-sub">找到球搭</view></view>
+      <text class="quick-arrow">›</text>
+    </view>
+  </view>
+
+  <view class="section-head">
+    <view class="section-title">附近热门球场</view>
+    <view class="section-link" bindtap="goCourts">查看全部 →</view>
+  </view>
+  <scroll-view class="venue-scroll" scroll-x enhanced show-scrollbar="false">
+    <view class="venue-row">
+      <view class="venue-card card" wx:for="{{venues}}" wx:key="id" data-id="{{item.id}}" bindtap="goVenue">
+        <view class="venue-cover" style="background: {{item.color}};">
+          <view class="court-mini">
+            <view class="court-mini-line vertical"></view><view class="court-mini-line horizontal"></view>
+          </view>
+          <view class="cover-word">{{item.shortName}}</view>
+          <view class="lime-tag cover-tag">{{item.label}}</view>
+        </view>
+        <view class="venue-body">
+          <view class="venue-name">{{item.name}}</view>
+          <view class="venue-meta"><text class="star">★</text> {{item.rating}} <text class="dot">·</text> {{item.distance}} <text class="dot">·</text> {{item.courts}}片场</view>
+          <view class="venue-foot"><view><text class="price">¥{{item.price}}</text><text class="unit"> 起/小时</text></view><text class="slots">今日有位</text></view>
+        </view>
+      </view>
+    </view>
+  </scroll-view>
+
+  <view class="section-head">
+    <view class="section-title">一起打球</view>
+    <view class="section-link" bindtap="goMatches">更多约球 →</view>
+  </view>
+  <view class="date-strip card">
+    <view class="date-item {{item.active ? 'active' : ''}}" wx:for="{{dates}}" wx:key="value" data-index="{{index}}" bindtap="selectDate">
+      <text class="date-label">{{item.label}}</text><text class="date-day">{{item.day}}</text>
+    </view>
+  </view>
+  <view class="match-card card" wx:for="{{matches}}" wx:key="id">
+    <view class="match-top">
+      <view class="avatar">{{item.avatar}}</view>
+      <view class="host-info"><view class="host-name">{{item.host}} <text class="level soft-tag">{{item.level}}</text></view><view class="match-title">{{item.title}}</view></view>
+      <view class="outline-tag">{{item.type}}</view>
+    </view>
+    <view class="match-details">
+      <view>◷ <text>{{item.date}}</text></view>
+      <view>⌖ <text>{{item.venue}} · {{item.distance}}</text></view>
+    </view>
+    <view class="match-foot">
+      <view class="player-state"><text class="player-dots">●●○○</text> {{item.players}}/{{item.total}} 人 · AA ¥{{item.price}}</view>
+      <button class="join-btn" data-title="{{item.title}}" bindtap="joinMatch">申请加入</button>
+    </view>
+  </view>
+  <view class="safe-bottom"></view>
+</view>

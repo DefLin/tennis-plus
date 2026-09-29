@@ -1,0 +1,26 @@
+{
+  "request合法域名": [
+    "https://api.def00.xyz"
+  ],
+  "socket合法域名": [
+    "wss://api.def00.xyz"
+  ],
+  "uploadFile合法域名": [
+    "https://api.def00.xyz"
+  ],
+  "downloadFile合法域名": [
+    "https://api.def00.xyz"
+  ],
+  "udp合法域名": [
+    "udp://api.def00.xyz"
+  ],
+  "tcp合法域名": [
+    "tcp://api.def00.xyz"
+  ],
+  "DNS预解析域名": [
+    "api.def00.xyz"
+  ],
+  "预连接域名": [
+    "https://api.def00.xyz"
+  ]
+}
