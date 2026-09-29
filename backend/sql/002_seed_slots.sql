@@ -1,0 +1,16 @@
+INSERT INTO court_slots (venue_id, booking_date, start_time, end_time, price_cents)
+SELECT v.id, DATE_ADD(CURDATE(), INTERVAL d.day_offset DAY), t.start_time,
+       ADDTIME(t.start_time, '01:00:00'),
+       CASE WHEN HOUR(t.start_time) >= 18 THEN v.price_cents + 4000 ELSE v.price_cents END
+FROM venues v
+JOIN (
+  SELECT 0 AS day_offset UNION ALL SELECT 1 UNION ALL SELECT 2 UNION ALL SELECT 3
+  UNION ALL SELECT 4 UNION ALL SELECT 5 UNION ALL SELECT 6
+) d
+JOIN (
+  SELECT '08:00:00' AS start_time UNION ALL SELECT '09:00:00' UNION ALL SELECT '10:00:00'
+  UNION ALL SELECT '11:00:00' UNION ALL SELECT '14:00:00' UNION ALL SELECT '15:00:00'
+  UNION ALL SELECT '16:00:00' UNION ALL SELECT '17:00:00' UNION ALL SELECT '18:00:00'
+  UNION ALL SELECT '19:00:00'
+) t
+ON DUPLICATE KEY UPDATE price_cents = VALUES(price_cents);
