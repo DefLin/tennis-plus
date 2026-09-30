@@ -14,7 +14,7 @@ function request(path, method = 'GET', data = {}) {
       },
       success: ({ statusCode, data: response }) => {
         if (statusCode >= 200 && statusCode < 300) resolve(response)
-        else reject(Object.assign(new Error(response?.message || `请求失败（${statusCode}）`), { statusCode }))
+        else reject(Object.assign(new Error((response && response.message) || `请求失败（${statusCode}）`), { statusCode }))
       },
       fail: error => reject(new Error(error.errMsg || '网络连接失败')),
     })
@@ -67,7 +67,7 @@ function uploadAvatar(filePath) {
           header: { 'Content-Type': contentType, Authorization: authorizationHeader(token) },
           success: ({ statusCode, data: response }) => {
             if (statusCode >= 200 && statusCode < 300) resolve(normalizeUser(response.user))
-            else reject(Object.assign(new Error(response?.message || `头像上传失败（${statusCode}）`), { statusCode }))
+            else reject(Object.assign(new Error((response && response.message) || `头像上传失败（${statusCode}）`), { statusCode }))
           },
           fail: error => reject(new Error(error.errMsg || '头像上传失败')),
         })

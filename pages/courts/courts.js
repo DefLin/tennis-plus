@@ -14,6 +14,7 @@ Page({
     locationName: '正在获取位置…',
     locating: true,
     nearbyLoading: false,
+    dataNotice: '',
     latitude: DEFAULT_LOCATION.latitude,
     longitude: DEFAULT_LOCATION.longitude,
     markers: [],
@@ -57,16 +58,23 @@ Page({
       const result = await api.request('/v1/venues/nearby', 'GET', { latitude, longitude, radius: 15000 })
       const venues = Array.isArray(result.venues) ? result.venues : []
       const locationName = result.locationName || '当前位置附近'
-      this.setData({ venues, locationName })
+      this.setData({
+        venues,
+        locationName,
+        dataNotice: result.fallback ? '暂时展示平台可预订球场' : '',
+      })
       getApp().globalData.locationName = locationName
       this.applyFilters()
       if (showToast) wx.showToast({ title: venues.length ? `找到${venues.length}个附近球场` : '附近暂无球场', icon: 'none' })
     } catch (error) {
       const venues = fallbackVenues
         .map(venue => withDistance(venue, latitude, longitude))
-        .filter(venue => venue.distanceMeters <= 30000)
         .sort((a, b) => a.distanceMeters - b.distanceMeters)
-      this.setData({ venues, locationName: '当前位置附近' })
+      this.setData({
+        venues,
+        locationName: '当前位置附近',
+        dataNotice: '附近查询暂不可用，正在展示平台球场',
+      })
       this.applyFilters()
       if (showToast) wx.showToast({ title: error.message || '附近球场加载失败', icon: 'none' })
     } finally {
@@ -105,7 +113,9 @@ Page({
     })
     if (activeFilter === '室内') filteredVenues = filteredVenues.filter(item => Number(item.indoor) > 0 || (item.tags || []).some(tag => tag.includes('室内')))
     if (activeFilter === '低于¥80') filteredVenues = filteredVenues.filter(item => Number.isFinite(Number(item.price)) && Number(item.price) < 80)
-    if (activeFilter === '距离优先') filteredVenues.sort((a, b) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
+    if (activeFilter === '距离优先') {
+      filteredVenues.sort((a, b) => distanceValue(a.distanceMeters) - distanceValue(b.distanceMeters))
+    }
     this.refreshVenueView(filteredVenues)
   },
 
@@ -147,7 +157,7 @@ Page({
   },
 
   markerTap(e) {
-    const venue = this.markerVenues?.[Number(e.detail.markerId) - 1]
+    const venue = this.markerVenues && this.markerVenues[Number(e.detail.markerId) - 1]
     if (!venue) return
     if (venue.source === 'tencent-map') return this.showMapVenue(venue)
     wx.navigateTo({ url: `/pages/court-detail/court-detail?id=${venue.id}` })
@@ -188,4 +198,8 @@ function haversine(lat1, lng1, lat2, lng2) {
 function formatDistance(meters) {
   if (meters < 1000) return `${meters}m`
   return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)}km`
+}
+
+function distanceValue(value) {
+  return Number.isFinite(value) ? value : Number.MAX_SAFE_INTEGER
 }

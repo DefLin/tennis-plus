@@ -9,7 +9,7 @@ async function login(code) {
   const session = await codeToSession(code)
   const openid = session.openid
   const [existing] = await pool.query('SELECT id, nickname, avatar, level FROM users WHERE openid = ?', [openid])
-  const id = existing[0]?.id || crypto.randomUUID()
+  const id = (existing[0] && existing[0].id) || crypto.randomUUID()
   if (existing[0]) await pool.query('UPDATE users SET updated_at = UTC_TIMESTAMP() WHERE id = ?', [id])
   else await pool.query('INSERT INTO users (id, openid) VALUES (?, ?)', [id, openid])
   const user = existing[0] || { id, nickname: '微信球友', avatar: 'WX', level: 'NTRP 2.5' }

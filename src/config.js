@@ -21,4 +21,6 @@ module.exports = {
   databaseUrl: required('DATABASE_URL'),
   bookingHoldMinutes: Number(process.env.BOOKING_HOLD_MINUTES || 15),
   corsOrigin: process.env.CORS_ORIGIN || '*',
+  tencentMapKey: process.env.TENCENT_MAP_KEY || '',
+  uploadDir: process.env.UPLOAD_DIR || '/app/uploads',
 }

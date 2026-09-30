@@ -1,24 +1,75 @@
 const express = require('express')
 const cors = require('cors')
 const crypto = require('node:crypto')
+const fs = require('node:fs/promises')
+const path = require('node:path')
 const config = require('./config')
 const { pool, withTransaction } = require('./db')
 const { login, requireAuth } = require('./auth')
 const { createJsapiOrder, paymentParameters, verifyNotifySignature, decryptNotify } = require('./wechat')
+const { findNearbyCourts } = require('./maps')
 
 const app = express()
 app.disable('x-powered-by')
+app.set('trust proxy', 1)
 app.use(cors({ origin: config.corsOrigin === '*' ? true : config.corsOrigin.split(',').map(item => item.trim()) }))
 app.use('/v1/payments/wechat/notify', express.raw({ type: 'application/json', limit: '1mb' }))
 app.use(express.json({ limit: '1mb' }))
+app.use('/uploads', express.static(config.uploadDir, { maxAge: '7d', immutable: false }))
 
 app.get('/health', async (request, response) => {
   try { await pool.query('SELECT 1'); response.json({ status: 'ok', service: 'tennis-plus-api' }) }
   catch { response.status(503).json({ status: 'error', service: 'tennis-plus-api' }) }
 })
 
+app.get('/v1/venues/nearby', async (request, response, next) => {
+  const latitude = Number(request.query.latitude)
+  const longitude = Number(request.query.longitude)
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return response.status(400).json({ message: '经纬度参数不正确' })
+  }
+  try {
+    response.json(await findNearbyCourts(latitude, longitude, request.query.radius))
+  } catch (error) {
+    console.warn('Nearby venue provider unavailable, using database fallback:', error.message)
+    try { response.json(await findDatabaseVenues(latitude, longitude)) }
+    catch (databaseError) { next(databaseError) }
+  }
+})
+
 app.post('/v1/auth/wechat', async (request, response, next) => {
   try { response.json(await login(request.body.code)) } catch (error) { next(error) }
+})
+
+app.get('/v1/users/me', requireAuth, async (request, response, next) => {
+  try {
+    const user = await getUser(request.auth.sub)
+    if (!user) return response.status(404).json({ message: '用户不存在' })
+    response.json({ user })
+  } catch (error) { next(error) }
+})
+
+app.patch('/v1/users/me', requireAuth, async (request, response, next) => {
+  try {
+    const nickname = String(request.body.nickname || '').trim()
+    if (!nickname || nickname.length > 20) return response.status(400).json({ message: '昵称长度应为 1–20 个字符' })
+    await pool.query('UPDATE users SET nickname = ? WHERE id = ?', [nickname, request.auth.sub])
+    response.json({ user: await getUser(request.auth.sub) })
+  } catch (error) { next(error) }
+})
+
+app.put('/v1/users/me/avatar', requireAuth, express.raw({ type: ['image/jpeg', 'image/png', 'image/webp'], limit: '3mb' }), async (request, response, next) => {
+  try {
+    if (!Buffer.isBuffer(request.body) || !request.body.length) return response.status(400).json({ message: '请选择有效的头像图片' })
+    const extension = detectImageExtension(request.body)
+    if (!extension) return response.status(415).json({ message: '头像仅支持 JPG、PNG 或 WebP' })
+    await fs.mkdir(config.uploadDir, { recursive: true })
+    const fileName = `${request.auth.sub}.${extension}`
+    await fs.writeFile(path.join(config.uploadDir, fileName), request.body, { mode: 0o640 })
+    const avatar = `/uploads/${fileName}?v=${Date.now()}`
+    await pool.query('UPDATE users SET avatar = ? WHERE id = ?', [avatar, request.auth.sub])
+    response.json({ user: await getUser(request.auth.sub) })
+  } catch (error) { next(error) }
 })
 
 app.get('/v1/venues/:venueId/slots', async (request, response, next) => {
@@ -85,7 +136,7 @@ app.post('/v1/payments/wechat/notify', async (request, response, next) => {
       if (!orders[0]) throw new Error('order not found')
       const order = orders[0]
       if (order.status === 'paid') return
-      if (payment.trade_state !== 'SUCCESS' || Number(payment.amount?.total) !== order.amount_cents) throw new Error('payment verification failed')
+      if (payment.trade_state !== 'SUCCESS' || Number(payment.amount && payment.amount.total) !== order.amount_cents) throw new Error('payment verification failed')
       await connection.query('UPDATE orders SET status = \'paid\', transaction_id = ?, paid_at = UTC_TIMESTAMP() WHERE id = ?', [payment.transaction_id, order.id])
       await connection.query('UPDATE court_slots SET status = \'paid\', hold_expires_at = NULL WHERE id = ?', [order.slot_id])
     })
@@ -101,6 +152,65 @@ app.use((error, request, response, next) => {
 async function releaseExpiredHolds() {
   await pool.query('UPDATE court_slots SET status = \'available\', hold_expires_at = NULL, order_id = NULL WHERE status = \'held\' AND hold_expires_at < UTC_TIMESTAMP()')
   await pool.query(`UPDATE orders SET status = 'expired' WHERE status = 'pending' AND created_at < DATE_SUB(UTC_TIMESTAMP(), INTERVAL ${config.bookingHoldMinutes} MINUTE)`)
+}
+
+async function getUser(id) {
+  const [rows] = await pool.query('SELECT id, nickname, avatar, level FROM users WHERE id = ?', [id])
+  return rows[0] || null
+}
+
+async function findDatabaseVenues(latitude, longitude) {
+  const [rows] = await pool.query(
+    `SELECT id, name, address, price_cents, latitude, longitude,
+            TIME_FORMAT(open_time, '%H:%i') AS open_time,
+            TIME_FORMAT(close_time, '%H:%i') AS close_time
+     FROM venues WHERE active = 1`,
+  )
+  const venues = rows.map((venue, index) => {
+    const distanceMeters = haversine(latitude, longitude, Number(venue.latitude), Number(venue.longitude))
+    return {
+      id: venue.id,
+      source: 'database',
+      name: venue.name,
+      shortName: venue.name.slice(0, 10),
+      address: venue.address,
+      distanceMeters,
+      distance: formatDistance(distanceMeters),
+      latitude: Number(venue.latitude),
+      longitude: Number(venue.longitude),
+      price: Number(venue.price_cents) / 100,
+      rating: null,
+      reviews: null,
+      courts: null,
+      indoor: null,
+      open: `${venue.open_time}–${venue.close_time}`,
+      color: ['#285b46', '#56706f', '#b35f35', '#324a67'][index % 4],
+      label: '平台球场',
+      tags: ['可预订'],
+    }
+  }).sort((a, b) => a.distanceMeters - b.distanceMeters)
+  return { locationName: '当前位置附近', venues, fallback: true }
+}
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const toRadians = degree => degree * Math.PI / 180
+  const deltaLat = toRadians(lat2 - lat1)
+  const deltaLng = toRadians(lng2 - lng1)
+  const value = Math.sin(deltaLat / 2) ** 2
+    + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(deltaLng / 2) ** 2
+  return Math.round(6371000 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value)))
+}
+
+function formatDistance(meters) {
+  if (meters < 1000) return `${meters}m`
+  return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)}km`
+}
+
+function detectImageExtension(buffer) {
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))) return 'png'
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'jpg'
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'webp'
+  return null
 }
 
 const server = app.listen(config.port, () => console.log(`Tennis Plus API listening on :${config.port}`))

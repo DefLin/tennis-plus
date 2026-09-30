@@ -4,6 +4,7 @@
     <view class="map-toggle" bindtap="toggleView">{{viewMode === 'list' ? '地图' : '列表'}}</view>
   </view>
   <view class="location-row" bindtap="locateUser">⌖ <text>{{locationName}}</text><text class="locate">{{locating ? '定位中…' : '重新定位'}}</text></view>
+  <view wx:if="{{dataNotice}}" class="data-notice">{{dataNotice}}</view>
   <scroll-view class="filter-scroll" scroll-x show-scrollbar="false">
     <view class="filter-row">
       <view class="filter {{activeFilter === item ? 'active' : ''}}" wx:for="{{filters}}" wx:key="*this" data-value="{{item}}" bindtap="chooseFilter">{{item}} {{index === 0 ? '⌄' : ''}}</view>
@@ -33,6 +34,6 @@
         <view class="bottom-line"><view wx:if="{{item.price}}"><text class="price">¥{{item.price}}</text><text class="unit"> 起/小时</text></view><view wx:else class="map-source">位置服务数据</view><view class="book-pill">{{item.source === 'tencent-map' ? '查看位置' : '可预订'}}</view></view>
       </view>
     </view>
-    <view wx:if="{{!filteredVenues.length}}" class="empty"><view class="empty-ball">●</view><view>没有找到匹配的球场</view><text>换个关键词试试</text></view>
+    <view wx:if="{{!filteredVenues.length}}" class="empty"><view class="empty-ball">●</view><view>{{query ? '没有找到匹配的球场' : '附近暂未找到网球场'}}</view><text>{{query ? '换个关键词试试' : '点击重新定位或稍后再试'}}</text></view>
   </view>
 </view>

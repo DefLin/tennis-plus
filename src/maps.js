@@ -1,21 +1,15 @@
 const config = require('./config')
 
 async function tencentMapRequest(path, params) {
-  if (!config.tencentMapKey) {
-    throw Object.assign(new Error('服务器尚未配置腾讯位置服务 Key'), { statusCode: 503 })
-  }
-
+  if (!config.tencentMapKey) throw new Error('服务器尚未配置腾讯位置服务 Key')
   const url = new URL(`https://apis.map.qq.com${path}`)
   Object.entries({ ...params, key: config.tencentMapKey }).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') url.searchParams.set(key, String(value))
   })
-
   const response = await fetch(url, { signal: AbortSignal.timeout(10000) })
-  if (!response.ok) throw Object.assign(new Error(`腾讯位置服务请求失败：HTTP ${response.status}`), { statusCode: 502 })
+  if (!response.ok) throw new Error(`腾讯位置服务请求失败：HTTP ${response.status}`)
   const result = await response.json()
-  if (result.status !== 0) {
-    throw Object.assign(new Error(`腾讯位置服务请求失败：${result.message || result.status}`), { statusCode: 502 })
-  }
+  if (result.status !== 0) throw new Error(`腾讯位置服务请求失败：${result.message || result.status}`)
   return result
 }
 
@@ -31,13 +25,11 @@ async function findNearbyCourts(latitude, longitude, radius = 15000) {
     }),
     tencentMapRequest('/ws/geocoder/v1/', { location: `${latitude},${longitude}` }),
   ])
-
   const component = (geocode.result && geocode.result.address_component) || {}
   const locationName = [component.city || component.province, component.district]
     .filter(Boolean)
     .filter((item, index, array) => index === 0 || item !== array[index - 1])
     .join(' · ') || '当前位置附近'
-
   const venues = (places.data || []).map((place, index) => ({
     id: `map_${place.id || index}`,
     source: 'tencent-map',
@@ -60,7 +52,6 @@ async function findNearbyCourts(latitude, longitude, radius = 15000) {
     label: index < 3 ? '离你最近' : '附近球场',
     tags: ['网球场', component.district].filter(Boolean),
   }))
-
   return { locationName, venues }
 }
 

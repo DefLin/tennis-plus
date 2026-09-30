@@ -7,6 +7,7 @@ services:
       - "127.0.0.1:3000:3000"
     volumes:
       - ./keys:/app/keys:ro
+      - uploads_data:/app/uploads
     depends_on:
       mysql:
         condition: service_healthy
@@ -29,3 +30,4 @@ services:
       retries: 20
 volumes:
   mysql_data:
+  uploads_data:

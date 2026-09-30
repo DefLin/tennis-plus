@@ -23,14 +23,18 @@ app.get('/health', async (request, response) => {
 })
 
 app.get('/v1/venues/nearby', async (request, response, next) => {
+  const latitude = Number(request.query.latitude)
+  const longitude = Number(request.query.longitude)
+  if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
+    return response.status(400).json({ message: '经纬度参数不正确' })
+  }
   try {
-    const latitude = Number(request.query.latitude)
-    const longitude = Number(request.query.longitude)
-    if (!Number.isFinite(latitude) || latitude < -90 || latitude > 90 || !Number.isFinite(longitude) || longitude < -180 || longitude > 180) {
-      return response.status(400).json({ message: '经纬度参数不正确' })
-    }
     response.json(await findNearbyCourts(latitude, longitude, request.query.radius))
-  } catch (error) { next(error) }
+  } catch (error) {
+    console.warn('Nearby venue provider unavailable, using database fallback:', error.message)
+    try { response.json(await findDatabaseVenues(latitude, longitude)) }
+    catch (databaseError) { next(databaseError) }
+  }
 })
 
 app.post('/v1/auth/wechat', async (request, response, next) => {
@@ -132,7 +136,7 @@ app.post('/v1/payments/wechat/notify', async (request, response, next) => {
       if (!orders[0]) throw new Error('order not found')
       const order = orders[0]
       if (order.status === 'paid') return
-      if (payment.trade_state !== 'SUCCESS' || Number(payment.amount?.total) !== order.amount_cents) throw new Error('payment verification failed')
+      if (payment.trade_state !== 'SUCCESS' || Number(payment.amount && payment.amount.total) !== order.amount_cents) throw new Error('payment verification failed')
       await connection.query('UPDATE orders SET status = \'paid\', transaction_id = ?, paid_at = UTC_TIMESTAMP() WHERE id = ?', [payment.transaction_id, order.id])
       await connection.query('UPDATE court_slots SET status = \'paid\', hold_expires_at = NULL WHERE id = ?', [order.slot_id])
     })
@@ -153,6 +157,53 @@ async function releaseExpiredHolds() {
 async function getUser(id) {
   const [rows] = await pool.query('SELECT id, nickname, avatar, level FROM users WHERE id = ?', [id])
   return rows[0] || null
+}
+
+async function findDatabaseVenues(latitude, longitude) {
+  const [rows] = await pool.query(
+    `SELECT id, name, address, price_cents, latitude, longitude,
+            TIME_FORMAT(open_time, '%H:%i') AS open_time,
+            TIME_FORMAT(close_time, '%H:%i') AS close_time
+     FROM venues WHERE active = 1`,
+  )
+  const venues = rows.map((venue, index) => {
+    const distanceMeters = haversine(latitude, longitude, Number(venue.latitude), Number(venue.longitude))
+    return {
+      id: venue.id,
+      source: 'database',
+      name: venue.name,
+      shortName: venue.name.slice(0, 10),
+      address: venue.address,
+      distanceMeters,
+      distance: formatDistance(distanceMeters),
+      latitude: Number(venue.latitude),
+      longitude: Number(venue.longitude),
+      price: Number(venue.price_cents) / 100,
+      rating: null,
+      reviews: null,
+      courts: null,
+      indoor: null,
+      open: `${venue.open_time}–${venue.close_time}`,
+      color: ['#285b46', '#56706f', '#b35f35', '#324a67'][index % 4],
+      label: '平台球场',
+      tags: ['可预订'],
+    }
+  }).sort((a, b) => a.distanceMeters - b.distanceMeters)
+  return { locationName: '当前位置附近', venues, fallback: true }
+}
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const toRadians = degree => degree * Math.PI / 180
+  const deltaLat = toRadians(lat2 - lat1)
+  const deltaLng = toRadians(lng2 - lng1)
+  const value = Math.sin(deltaLat / 2) ** 2
+    + Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) * Math.sin(deltaLng / 2) ** 2
+  return Math.round(6371000 * 2 * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value)))
+}
+
+function formatDistance(meters) {
+  if (meters < 1000) return `${meters}m`
+  return `${(meters / 1000).toFixed(meters < 10000 ? 1 : 0)}km`
 }
 
 function detectImageExtension(buffer) {
